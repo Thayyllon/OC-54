@@ -1,0 +1,129 @@
+------ Radius Server in Debian ------- 
+
+ --Install MariaDB 
+
+apt install mariadb-server mariadb-client 
+
+ --Create database of users which be using in Radius
+
+mariadb -u root -p 
+
+ --Create the dabase of Radius
+
+CREATE DATABASE radius; 
+GRANT ALL PRIVILEGES ON radius. * to 'radius@localhost' IDENTIFY BY 'Password_of_radius';
+FLUSH PRIVILEGES;
+quit; 
+
+ --Install freeradius 
+
+apt install freeradius freeradius-mysql freeradius-utils
+
+ --With database create, we be import default tables of freeradius
+
+mariadb -u radius -p radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
+mariadb -u radius -p radius < /etc/freeradius/3.0/mods-config/sql/main/ippool/mysql/schema.sql
+
+ --After they commands will need of password of radius
+
+ --If you want logs more detail, you can modify the follow file 
+
+cp /etc/freeradius/3.0/radiusd.conf /etc/freeradius/3.0/radiusd.conf.orig
+
+vim /etc/freeradius/3.0/radiusd.conf
+
+	[...]
+	log {
+	    [...]
+		stripped_names = yes
+		auth = yes
+		auth_badpass = yes
+		auth_goodpass = yes
+	    [...]
+}
+[...]
+
+
+ --We will adjust the mod_SQL to work with connection of type mysql, file /etc/freeradius/3.0/mods-available/sql.orig
+
+	 sed -i 's/driver = "rlm_sql_null"/driver = "rlm_sql_mysql"/' /etc/freeradius/3.0/mods-available/sql
+	 sed -i 's/dialect = "sqlite"/dialect = "mysql"/' /etc/freeradius/3.0/mods-available/sql
+	 sed -i '/server = "localhost"/s/^#//g' /etc/freeradius/3.0/mods-available/sql
+	 sed -i '/port = 3306/s/^#//g' /etc/freeradius/3.0/mods-available/sql
+	 sed -i '/login = "radius"/s/^#//g' /etc/freeradius/3.0/mods-available/sql
+	 sed -i '/password = "radpass"/s/^#//g' /etc/freeradius/3.0/mods-available/sql
+	 sed -i '/read_clients = yes/s/^#//g' /etc/freeradius/3.0/mods-available/sql
+
+
+ --Change the PASSWORD_USER_RADIUS to you conection password
+
+	
+	 sed -i 's/radpass/SENHA_USER_RADIUS/' /etc/freeradius/3.0/mods-available/sql
+
+
+ --Enable the mod 
+	
+	 
+	 ln -s /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/sql
+
+ --Desactive the TLS of MySQL 
+	
+	
+	 sed -i '84,102 {s/^/##/}' /etc/freeradius/3.0/mods-available/sql
+ 	 sed -i 's/disable_tlsv1_1 = yes/disable_tlsv1_1 = no/' /etc/freeradius/3.0/mods-available/eap 
+         sed -i 's/disable_tlsv1 = yes/disable_tlsv1 = no/' /etc/freeradius/3.0/mods-available/eap
+	 sed -i 's/tls_min_version = "1.2"/tls_min_version = "1.0"/' /etc/freeradius/3.0/mods-available/eap
+
+ --Desactive some components whih not interess. 
+
+	
+	 cp /etc/freeradius/3.0/sites-available/default  /etc/freeradius/3.0/sites-available/default.org
+
+	sed -i '/digest/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '/suffix/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '/files/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '/ldap/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '/exec/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '/detail/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '/unix/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '/attr_filter.accounting_response/s/^/#/g' /etc/freeradius/3.0/sites-available/default
+ 	sed -i 's/-sql/sql/' /etc/freeradius/3.0/sites-available/default
+	sed -i '689 s/# *//' /etc/freeradius/3.0/sites-available/default
+ 	sed -i '854,874 {s/^/##/}' /etc/freeradius/3.0/sites-available/default
+
+ --Enable the service and starting freeradius	
+
+systemctl enable freeradius
+systemctl stop freeradius
+freeradius -X
+
+systemctl start freeradius
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

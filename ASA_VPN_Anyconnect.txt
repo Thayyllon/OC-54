@@ -1,0 +1,68 @@
+--- VPN Anyconnect ASA ---
+ --authentication from server RADIUS 
+
+!
+aaa-server MYRADIUS protocol radius
+aaa-server MYRADIUS (INSIDE) host $IP_OF_RADIUS
+
+!
+
+ --define vpn pool of address where client connect recept a ip
+
+!
+
+ip local pool ANYCONNECT_POOL1 $RANGE_IP_YOUR_VPN mask $NETMASK
+ip local pool ANYCONNECT_POOL1 10.99.1.1-10.99.1.254 mask 255.255.255.0
+
+!
+
+ --Configure Tunnel groups 
+
+!
+
+tunnel-group ANYCONN_1 type remote-access
+tunnel-group ANYCONN_1 general-attributes 
+	address-pool ANYCONNECT_POOL1
+	authentication-server-group MYRADIUS
+	default-group-policy NOACESS
+tunell-group ANYCON_1 webvpn-attributes
+	group-alias EMPLOYEES enable
+
+!
+
+ --set group policies 
+
+!
+
+group-policy STAFF_VPN_GROUP internal
+group-policy STAFF_VPN_GROUP attributes
+	vpn-tunnel-protocol ssl-client
+	vpn-filter value STAFF_VPN_ACL
+
+!
+
+ --create a acl using in group policy 
+	
+!
+
+access-list STAFF_VPN_ACL extended permit ip any any --> All ip access the VPN
+access-list STAFF_VPN_ACL extended permit ip 10.99.1.0 255.255.255.0 --> Specific network
+
+!
+
+ --Apply the configuration in interface 
+
+! 
+
+webvpn
+	enable OUTSIDE
+	anyconnect enable
+	tunnel-group-list enable
+
+!
+
+ --You can add more a Radius Server and differents policy, acl's to differens groups 
+
+ --Links Ref: https://www.auvik.com/franklyit/blog/configure-cisco-anyconnect-vpn/, https://www.youtube.com/watch?v=KfJPqXfaKSE&ab_channel=FKIT
+
+-------------------Thaylon Roberto Muniz da Silva, 28/02/23, 21:51--------------------------

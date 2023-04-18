@@ -1,0 +1,31 @@
+-- Install Splunk Foward in client and Splunk Enterprise in Server-- 
+
+	-https://www.splunk.com/en_us/download.html
+
+-- Install Splunk Enterprise in Centos7 --
+
+yum install -y "$FILE_NAME_OF_SPLUNK.rpm"
+cd /opt/splunk/bin
+./splunk start --accept-license 
+
+ -->create a user and password in splunk enterprise
+
+./splunk enable boot-start
+firewall-cmd --add-service=http --permanent
+firewall-cmd --add-port=8000/tcp --permanent
+firewall-cmd --reload
+
+ -->enter in web browser using ip of server in port 8000 ex:http://localhost:8000/en-US/account/login
+
+ -->access with credentials which you create 
+
+
+-- Install Splunk Foward in Wind Server --
+
+ -->download executable in splunk.com 
+
+ -->execute as administrator the executable, accept the rules, configure only credentials and second configuration of IP, and port 
+
+
+
+------------------Thaylon Roberto Muniz da Silva, 28/02/2023, 18:47-----------------------

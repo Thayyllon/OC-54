@@ -1,0 +1,47 @@
+----- Freeradius-Switch -----
+
+ --Configuration in switch 
+	
+	username backup privilege 15 password 0 P@ssw0rd
+	aaa new-model 
+	conf t 
+	radius-server host IP_OF_YOU_RADIUS auth-port 1645 acct-port 1646
+	key P@ssw0rd
+	exit
+	
+	test aaa server Radius IP_OF_YOU_RADIUS NAME_OF_USER PASSWORD_OF_USER
+
+	aaa authorization exec default group radius local
+
+
+ -- FreeRadius Configuration 
+
+	cd /etc/freeradius
+		
+ 	sudo nano clients.conf
+
+		client SWITCH_IP {
+		secret = secretkey
+		nastype = cisco 
+		shortname = switch
+		}
+
+	sudo nano users 
+
+		cisco Cleartext-Password := "password"
+			Service-Type = NAS-Prompt-Users,
+			Cisco-AVPair = "shell:priv-lvl=15"
+
+	sudo /etc/init.d/freeradius restart
+
+	#In order to change the DEFAULT user group in the user's file in order to give all users who are 
+members of cisco-rw a privilege level of 15, enter
+
+		DEFAULT Group == cisco-rw, Auth-Type = System
+       			Service-Type = NAS-Prompt-User,
+        		cisco-avpair :="shell:priv-lvl=15"
+
+ --Restart the radius server and verify in the switch the authenctication 
+
+	sh run | in radius
+	sh run | in aaa

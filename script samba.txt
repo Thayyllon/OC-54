@@ -1,0 +1,51 @@
+
+
+install samba
+
+	sudo apt-get install samba smbfs
+
+configure samba
+
+	nano /etc/samba/smb.conf
+
+set share folders
+
+	# <name>'s share
+	[MyShare]
+	   comment = YOUR COMMENTS
+	   path = /backup
+	   read only = no
+	   guest ok = yes
+
+restart samba
+
+	/etc/init.d/smbd restart
+
+create share folder
+
+	mkdir /backup
+
+set permitions
+
+	chmod 0777 /share-folder-path
+
+
+CRONJOB
+
+	backup /home to /backup 
+
+
+
+install ntp
+
+	sudo apt-get install ntp
+
+configure ntp
+
+	/etc/ntp.conf
+	
+		server <address> [prefer] 
+
+
+
+
